@@ -19,6 +19,7 @@ export interface Villager {
 }
 
 export interface ClothingItem {
+  category: string;
   id: number;
   user_id: number;
   name: string;
