@@ -36,7 +36,7 @@ export interface AuthTokenPayload {
 }
 
 // Request extension type to attach decoded user payload to Express requests
-import { Request } from 'express';
+import type { Request } from 'express';
 
 export interface AuthenticatedRequest extends Request {
   user?: AuthTokenPayload;
