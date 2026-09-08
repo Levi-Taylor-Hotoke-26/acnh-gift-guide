@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import type { Villager } from '../../../server/types';
 import { useAuth } from '../context/AuthContext';
 import { VillagerCard } from '../components/VillagerCard';
+import { AddVillagerModal } from '../components/AddVillagerModal';
 
 export const Villagers = () => {
   const [villagers, setVillagers] = useState<Villager[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { token } = useAuth();
 
@@ -35,11 +37,24 @@ export const Villagers = () => {
     fetchVillagers();
   }, [token]);
 
+  const handleVillagerAdded = (newVillager: Villager) => {
+    setVillagers((prev) => [...prev, newVillager]);
+  };
+
   return (
     <main className="roster-page">
       <header className="page-header">
-        <h1>Island Resident Roster</h1>
-        <p>Track friendship levels and move-out safety for your villagers.</p>
+        <div>
+          <h1>Island Resident Roster</h1>
+          <p>Track friendship levels and move-out safety for your villagers.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsModalOpen(true)}
+          className="btn-primary"
+        >
+          + Add Villager
+        </button>
       </header>
 
       {isLoading && (
@@ -67,6 +82,12 @@ export const Villagers = () => {
           )}
         </>
       )}
+
+      <AddVillagerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onVillagerAdded={handleVillagerAdded}
+      />
     </main>
   );
 };
