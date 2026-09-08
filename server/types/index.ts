@@ -15,7 +15,13 @@ export interface Villager {
   is_last_moved_in: boolean;
   is_relocating: boolean;
   asked_last_to_move: boolean;
-  icon_url: string;
+  icon_url?: string;
+  style_1?: string;
+  style_2?: string;
+  color_1?: string;
+  color_2?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ClothingItem {

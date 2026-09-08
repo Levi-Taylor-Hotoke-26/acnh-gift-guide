@@ -1,22 +1,21 @@
-import type { Villager } from '../../../server/types';
+import type { Villager, ClothingItem } from '../../../server/types';
 import { isVillagerSafeFromMoving } from '../../../server/services/moveOut';
+import { getBestGiftRecommendations } from '../../../server/services/giftRecommendation';
 
 interface VillagerCardProps {
   villager: Villager;
+  inventory?: ClothingItem[];
 }
 
-export const VillagerCard = ({ villager }: VillagerCardProps) => {
+export const VillagerCard = ({ villager, inventory = [] }: VillagerCardProps) => {
   const isSafe = isVillagerSafeFromMoving(villager);
+  const giftRecommendations = getBestGiftRecommendations(villager, inventory, 2);
 
   return (
     <article className="villager-card" aria-labelledby={`villager-${villager.id}-name`}>
       <header className="card-header">
         {villager.icon_url ? (
-          <img
-            src={villager.icon_url}
-            alt=""
-            className="villager-icon"
-          />
+          <img src={villager.icon_url} alt="" className="villager-icon" />
         ) : (
           <div className="villager-avatar-placeholder" aria-hidden="true">
             🍃
@@ -43,17 +42,23 @@ export const VillagerCard = ({ villager }: VillagerCardProps) => {
           )}
         </div>
 
-        <ul className="villager-flags" role="list">
-          <li>
-            <span>Last Moved In:</span> {villager.is_last_moved_in ? 'Yes' : 'No'}
-          </li>
-          <li>
-            <span>Relocating House:</span> {villager.is_relocating ? 'Yes' : 'No'}
-          </li>
-          <li>
-            <span>Asked Last to Move:</span> {villager.asked_last_to_move ? 'Yes' : 'No'}
-          </li>
-        </ul>
+        <section className="gift-recommendations" aria-label="Recommended Gifts from Closet">
+          <h3 className="gift-heading">🎁 Recommended Closet Gifts:</h3>
+          {giftRecommendations.length === 0 ? (
+            <p className="no-gifts-text">No matching closet items found.</p>
+          ) : (
+            <ul className="gift-list" role="list">
+              {giftRecommendations.map((rec) => (
+                <li key={rec.item.id} className="gift-item">
+                  <span className="gift-name">{rec.item.name}</span>
+                  <span className="gift-score" aria-label={`Match score ${rec.score} out of 4`}>
+                    ⭐ {rec.score}/4 Match
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </article>
   );

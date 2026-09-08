@@ -1,32 +1,35 @@
 import { useEffect, useState } from 'react';
-import type { Villager } from '../../../server/types';
+import type { Villager, ClothingItem } from '../../../server/types';
 import { useAuth } from '../context/AuthContext';
 import { VillagerCard } from '../components/VillagerCard';
-import { AddVillagerModal } from '../components/AddVillagerModal';
 
 export const Villagers = () => {
   const [villagers, setVillagers] = useState<Villager[]>([]);
+  const [inventory, setInventory] = useState<ClothingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { token } = useAuth();
 
   useEffect(() => {
-    const fetchVillagers = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/villagers', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const headers = { Authorization: `Bearer ${token}` };
 
-        if (!response.ok) {
-          throw new Error('Failed to load island roster.');
+        const [villagersRes, inventoryRes] = await Promise.all([
+          fetch('/api/villagers', { headers }),
+          fetch('/api/clothing', { headers }),
+        ]);
+
+        if (!villagersRes.ok || !inventoryRes.ok) {
+          throw new Error('Failed to load island data.');
         }
 
-        const data: Villager[] = await response.json();
-        setVillagers(data);
+        const villagersData: Villager[] = await villagersRes.json();
+        const inventoryData: ClothingItem[] = await inventoryRes.json();
+
+        setVillagers(villagersData);
+        setInventory(inventoryData);
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : 'An error occurred.');
       } finally {
@@ -34,60 +37,26 @@ export const Villagers = () => {
       }
     };
 
-    fetchVillagers();
+    fetchData();
   }, [token]);
-
-  const handleVillagerAdded = (newVillager: Villager) => {
-    setVillagers((prev) => [...prev, newVillager]);
-  };
 
   return (
     <main className="roster-page">
       <header className="page-header">
-        <div>
-          <h1>Island Resident Roster</h1>
-          <p>Track friendship levels and move-out safety for your villagers.</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="btn-primary"
-        >
-          + Add Villager
-        </button>
+        <h1>Island Resident Roster</h1>
+        <p>Track friendship levels, move-out safety, and gift recommendations.</p>
       </header>
 
-      {isLoading && (
-        <div role="status" className="loading-spinner">
-          Loading roster...
-        </div>
-      )}
-
-      {error && (
-        <div role="alert" className="error-banner">
-          {error}
-        </div>
-      )}
+      {isLoading && <div role="status" className="loading-spinner">Loading island data...</div>}
+      {error && <div role="alert" className="error-banner">{error}</div>}
 
       {!isLoading && !error && (
-        <>
-          {villagers.length === 0 ? (
-            <p className="empty-state">No villagers on your island yet. Add one to get started!</p>
-          ) : (
-            <div className="villager-grid">
-              {villagers.map((villager) => (
-                <VillagerCard key={villager.id} villager={villager} />
-              ))}
-            </div>
-          )}
-        </>
+        <div className="villager-grid">
+          {villagers.map((v) => (
+            <VillagerCard key={v.id} villager={v} inventory={inventory} />
+          ))}
+        </div>
       )}
-
-      <AddVillagerModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onVillagerAdded={handleVillagerAdded}
-      />
     </main>
   );
 };
