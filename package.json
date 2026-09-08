@@ -1,4 +1,9 @@
 {
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
   "name": "acnh-gift-guide",
   "version": "1.0.0",
   "description": "",
@@ -39,10 +44,12 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/supertest": "^7.2.1",
     "concurrently": "^10.0.5",
     "husky": "^9.1.7",
     "jsdom": "^30.0.1",
     "nodemon": "^3.1.14",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
