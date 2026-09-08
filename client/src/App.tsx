@@ -1,18 +1,15 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
+import { Login } from './pages/Login';
+import { Register } from './pages/Register';
+import { Villagers } from './pages/Villagers';
 
-// Protected Route Guard
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
-// Placeholder pages for next steps
-const LoginPage = () => <main><h1>Login Page</h1></main>;
-const RegisterPage = () => <main><h1>Register Page</h1></main>;
-const VillagersPage = () => <main><h1>Villagers Island Roster</h1></main>;
 const InventoryPage = () => <main><h1>Clothing Closet Inventory</h1></main>;
 
 export default function App() {
@@ -22,13 +19,13 @@ export default function App() {
         <Navbar />
         <div className="container">
           <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route
               path="/villagers"
               element={
                 <ProtectedRoute>
-                  <VillagersPage />
+                  <Villagers />
                 </ProtectedRoute>
               }
             />
