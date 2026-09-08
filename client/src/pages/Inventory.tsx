@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { ClothingItem } from '../../../server/types/index.ts';
+import type { ClothingItem } from '../../../server/types';
 import { useAuth } from '../context/AuthContext';
 import { ClothingCard } from '../components/ClothingCard';
+import { AddEditClothingModal } from '../components/AddEditClothingModal';
 
 export const Inventory = () => {
   const [items, setItems] = useState<ClothingItem[]>([]);
@@ -10,20 +11,20 @@ export const Inventory = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
+
   const { token } = useAuth();
 
   useEffect(() => {
     const fetchInventory = async () => {
       try {
         const response = await fetch('/api/clothing', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to load clothing inventory.');
-        }
+        if (!response.ok) throw new Error('Failed to load clothing inventory.');
 
         const data: ClothingItem[] = await response.json();
         setItems(data);
@@ -38,20 +39,34 @@ export const Inventory = () => {
     fetchInventory();
   }, [token]);
 
-  // Filter items by style tag
-  const handleStyleFilter = (style: string) => {
-    setSelectedStyle(style);
-    if (style === 'all') {
-      setFilteredItems(items);
-    } else {
+  const handleOpenAddModal = () => {
+    setEditingItem(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (item: ClothingItem) => {
+    setEditingItem(item);
+    setIsModalOpen(true);
+  };
+
+  const handleItemSaved = (savedItem: ClothingItem) => {
+    setItems((prev) => {
+      const exists = prev.some((i) => i.id === savedItem.id);
+      const updated = exists
+        ? prev.map((i) => (i.id === savedItem.id ? savedItem : i))
+        : [...prev, savedItem];
+      
       setFilteredItems(
-        items.filter(
-          (item) =>
-            item.style_1?.toLowerCase() === style.toLowerCase() ||
-            item.style_2?.toLowerCase() === style.toLowerCase()
-        )
+        selectedStyle === 'all'
+          ? updated
+          : updated.filter(
+              (i) =>
+                i.style_1?.toLowerCase() === selectedStyle.toLowerCase() ||
+                i.style_2?.toLowerCase() === selectedStyle.toLowerCase()
+            )
       );
-    }
+      return updated;
+    });
   };
 
   const handleDeleteItem = async (id: number) => {
@@ -61,9 +76,7 @@ export const Inventory = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete item.');
-      }
+      if (!response.ok) throw new Error('Failed to delete item.');
 
       const updated = items.filter((item) => item.id !== id);
       setItems(updated);
@@ -88,6 +101,9 @@ export const Inventory = () => {
           <h1>Clothing Closet Inventory</h1>
           <p>Manage stored apparel for villager gift matching.</p>
         </div>
+        <button type="button" onClick={handleOpenAddModal} className="btn-primary">
+          + Add Clothing Item
+        </button>
       </header>
 
       <section className="filter-bar" aria-label="Inventory Filters">
@@ -95,7 +111,19 @@ export const Inventory = () => {
         <select
           id="style-filter"
           value={selectedStyle}
-          onChange={(e) => handleStyleFilter(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSelectedStyle(val);
+            setFilteredItems(
+              val === 'all'
+                ? items
+                : items.filter(
+                    (item) =>
+                      item.style_1?.toLowerCase() === val.toLowerCase() ||
+                      item.style_2?.toLowerCase() === val.toLowerCase()
+                  )
+            );
+          }}
         >
           <option value="all">All Styles</option>
           <option value="Cute">Cute</option>
@@ -107,31 +135,34 @@ export const Inventory = () => {
         </select>
       </section>
 
-      {isLoading && (
-        <div role="status" className="loading-spinner">
-          Loading closet inventory...
-        </div>
-      )}
-
-      {error && (
-        <div role="alert" className="error-banner">
-          {error}
-        </div>
-      )}
+      {isLoading && <div role="status" className="loading-spinner">Loading closet inventory...</div>}
+      {error && <div role="alert" className="error-banner">{error}</div>}
 
       {!isLoading && !error && (
         <>
           {filteredItems.length === 0 ? (
-            <p className="empty-state">No clothing items found matching your selection.</p>
+            <p className="empty-state">No clothing items found in your closet.</p>
           ) : (
             <div className="clothing-grid">
               {filteredItems.map((item) => (
-                <ClothingCard key={item.id} item={item} onDelete={handleDeleteItem} />
+                <ClothingCard
+                  key={item.id}
+                  item={item}
+                  onEdit={handleOpenEditModal}
+                  onDelete={handleDeleteItem}
+                />
               ))}
             </div>
           )}
         </>
       )}
+
+      <AddEditClothingModal
+        isOpen={isModalOpen}
+        itemToEdit={editingItem}
+        onClose={() => setIsModalOpen(false)}
+        onItemSaved={handleItemSaved}
+      />
     </main>
   );
 };

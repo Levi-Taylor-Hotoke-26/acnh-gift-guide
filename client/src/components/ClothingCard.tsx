@@ -1,11 +1,12 @@
-import type { ClothingItem } from '../../../server/types/index';
+import type { ClothingItem } from '../../../server/types';
 
 interface ClothingCardProps {
   item: ClothingItem;
+  onEdit?: (item: ClothingItem) => void;
   onDelete?: (id: number) => void;
 }
 
-export const ClothingCard = ({ item, onDelete }: ClothingCardProps) => {
+export const ClothingCard = ({ item, onEdit, onDelete }: ClothingCardProps) => {
   return (
     <article className="clothing-card" aria-labelledby={`clothing-${item.id}-name`}>
       <header className="card-header">
@@ -41,16 +42,28 @@ export const ClothingCard = ({ item, onDelete }: ClothingCardProps) => {
         </div>
       </div>
 
-      {onDelete && (
+      {(onEdit || onDelete) && (
         <footer className="card-footer">
-          <button
-            type="button"
-            onClick={() => onDelete(item.id)}
-            className="btn-danger"
-            aria-label={`Delete ${item.name} from inventory`}
-          >
-            Delete
-          </button>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(item)}
+              className="btn-secondary"
+              aria-label={`Edit ${item.name}`}
+            >
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(item.id)}
+              className="btn-danger"
+              aria-label={`Delete ${item.name} from inventory`}
+            >
+              Delete
+            </button>
+          )}
         </footer>
       )}
     </article>
