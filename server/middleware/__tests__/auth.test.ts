@@ -3,7 +3,6 @@ import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { authenticateToken } from '../auth';
 import { AuthenticatedRequest } from '../../types';
-import request from 'supertest';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'acnh_secret_key';
 
